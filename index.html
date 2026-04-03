@@ -1,0 +1,239 @@
+<html>
+<head>
+  <title>Final List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      font-family: Verdana;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .device {
+      width: 380px;
+      Height: 720px;
+      background: red;
+      border-radius: 40px;
+      padding: 20px;
+      border: 10px solid black;
+    }
+
+    /* SCREEN FRAME (3 LAYER BORDER) */
+    .frame {
+      border: 3px solid black;
+      padding: 6px;
+      background: #888;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .screen {
+      background: #fcec03;
+      border: 2px solid black;
+      border-radius: 10px;
+      height: 400px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .bottom-screen {
+      background: #fcec03;
+      border: 2px solid black;
+      border-radius: 10px;
+      height: 188px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* FIXED HEADERS */
+    .header {
+      background: #0307fc;
+      text-align: center;
+      font-weight: bold;
+      padding: 6px;
+      border-bottom: 2px solid black;
+      flex-shrink: 0;
+    }
+
+    /* SCROLL AREA */
+    .list {
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .item {
+      padding: 8px;
+      text-align: center;
+    }
+
+    .active {
+      background: #00ff00;
+      font-weight: bold;
+      border: 2px solid black;
+    }
+
+    /* CONTROLS */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .dpad {
+      display: flex;
+      gap: 20px;
+    }
+
+    .btn {
+      width: 60px;
+      height: 60px;
+      background: #4f565c;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid black;
+      font-size: 18px;
+    }
+
+    .select {
+      background: #4f565c;
+      color: white;
+      padding: 20px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid black;
+    }
+
+    /* INFO CONTENT */
+    .info {
+      padding: 8px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="device">
+
+  <!-- TOP SCREEN -->
+  <div class="frame">
+    <div class="screen">
+      <div class="header">In Game Name</div>
+      <div class="list" id="list"></div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="dpad">
+      <div class="btn" onclick="move(-1)">▲</div>
+      <div class="btn" onclick="move(1)">▼</div>
+    </div>
+
+    <div class="select" onclick="copyCode()">Copy Code</div>
+  </div>
+
+  <!-- BOTTOM SCREEN -->
+  <div class="frame">
+    <div class="bottom-screen">
+      <div class="header">Player Info</div>
+      <div class="info" id="details">Loading...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 🎵 MUSIC -->
+<audio id="bgm" autoplay loop>
+  <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const sheetID = "1h7QdrnrPelArV60UaLZFHvhwCt1_tD3sTouCEquJJi4";
+const sheetName = "Form Responses 1";
+
+const url = `https://opensheet.elk.sh/${sheetID}/${encodeURIComponent(sheetName)}`;
+
+let players = [];
+let currentIndex = 0;
+let items = [];
+
+fetch(url)
+  .then(res => res.json())
+  .then(data => {
+
+    players = data.map(row => ({
+      name: row["Name"],
+      ign: row["In Game Name"],
+      code: row["Friend Code"],
+      region: row["Vivillon Region"]
+    }));
+
+    players.sort((a,b)=>a.ign.localeCompare(b.ign));
+
+    const list = document.getElementById("list");
+
+    players.forEach((p, i) => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerText = p.ign;
+
+      list.appendChild(div);
+      items.push(div);
+    });
+
+    selectPlayer(0);
+  });
+
+function selectPlayer(index) {
+  currentIndex = index;
+
+  items.forEach(i => i.classList.remove("active"));
+  items[index].classList.add("active");
+
+  items[index].scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  const p = players[index];
+
+  document.getElementById("details").innerHTML = `
+    <p><b>Name:</b> ${p.name}</p>
+    <p><b>IGN:</b> ${p.ign}</p>
+    <p><b>Friend Code:</b> ${p.code}</p>
+    <p><b>Region:</b> ${p.region}</p>
+  `;
+}
+
+function move(dir) {
+  let newIndex = currentIndex + dir;
+
+  if (newIndex < 0) newIndex = 0;
+  if (newIndex >= players.length) newIndex = players.length - 1;
+
+  selectPlayer(newIndex);
+}
+
+function copyCode() {
+  const code = players[currentIndex].code;
+  navigator.clipboard.writeText(code);
+}
+</script>
+
+</body>
+</html>
